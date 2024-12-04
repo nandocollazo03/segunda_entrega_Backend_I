@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>Productos</h1>
+    <ul id="products-list">
+        {{#each products}}
+        <li data-id="{{this.id}}">{{this.title}} - {{this.description}} <button onclick="deleteProduct({{this.id}})">Delete</button></li>
+        {{/each}}
+    </ul>
+    <h2>Agregar producto</h2>
+    <form id="add-product-form">
+        <input type="text" id="title" placeholder="Title" required>
+        <input type="text" id="description" placeholder="Description" required>
+        <input type="text" id="code" placeholder="Code" required>
+        <input type="number" id="price" placeholder="Price" required>
+        <input type="number" id="stock" placeholder="Stock" required>
+        <input type="text" id="category" placeholder="Category" required>
+        <input type="text" id="thumbnails" placeholder="Thumbnails (comma separated)">
+        <button type="submit">Agregar producto</button>
+    </form>
+
+    <script>
+        const socket = io();
+
+        socket.on('updateProducts', (products) => {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+            products.forEach(product => {
+                const productItem = document.createElement('li');
+                productItem.setAttribute('data-id', product.id);
+                productItem.innerHTML = `${product.title} - ${product.description} <button onclick="deleteProduct(${product.id})">Delete</button>`;
+                productsList.appendChild(productItem);
+            });
+        });
+
+        document.getElementById('add-product-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const product = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                code: document.getElementById('code').value,
+                price: document.getElementById('price').value,
+                stock: document.getElementById('stock').value,
+                category: document.getElementById('category').value,
+                thumbnails: document.getElementById('thumbnails').value.split(',')
+            };
+            socket.emit('newProduct', product);
+        });
+
+        function deleteProduct(id) {
+            socket.emit('deleteProduct', id);
+        }
+    </script>
+</body>
+</html>
